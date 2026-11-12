@@ -7,6 +7,8 @@ else()
 	set(S2SDK_PROTOC devtools/bin/linux/protoc)
 endif()
 
+set(S2SDK_PROTOC_RUN "${CMAKE_CURRENT_LIST_DIR}/protoc_run.cmake" CACHE INTERNAL "s2sdk_protobufs() protoc wrapper")
+
 # s2sdk_protobufs(), like SdkHelpers.addProtobufs():
 # Generates the given protos into a target and compiles them with it. The protos
 # are relative to the SDK or absolute, and a proto's imports have to be listed
@@ -52,10 +54,15 @@ function(s2sdk_protobufs target)
 		set(proto_paths "${dir}" ${dirs})
 		list(REMOVE_DUPLICATES proto_paths)
 		list(TRANSFORM proto_paths PREPEND "--proto_path=")
+		# Through protoc_run.cmake, which drops protoc's notes about the protos
+		# themselves (no syntax line, an unused import) and keeps the rest.
+		set(protoc_args ${proto_paths} "--cpp_out=${out}" "${proto}")
+		string(REPLACE ";" "\\;" protoc_args_escaped "${protoc_args}")
 		add_custom_command(
 			OUTPUT "${out}/${name}.pb.cc" "${out}/${name}.pb.h"
-			COMMAND "${protoc}" ${proto_paths} "--cpp_out=${out}" "${proto}"
-			DEPENDS ${protos}
+			COMMAND "${CMAKE_COMMAND}" "-DPROTOC=${protoc}" "-DPROTOC_ARGS=${protoc_args_escaped}"
+				-P "${S2SDK_PROTOC_RUN}"
+			DEPENDS ${protos} "${S2SDK_PROTOC_RUN}"
 			COMMENT "Generating ${name}.pb.cc"
 			VERBATIM
 		)
