@@ -1,5 +1,5 @@
-# Runs protoc for s2sdk_protobufs() (cmake -P): the arguments in PROTOC_ARGS,
-# the compiler in PROTOC.
+# Runs protoc for s2sdk_protobufs() (cmake -P): the arguments in PROTOC_ARGS
+# (joined with "|"), the compiler in PROTOC.
 #
 # The SDK's protos are Valve's, as the game ships them: none says which syntax
 # it is (protoc assumes proto2, which is right) and some import a file they do
@@ -7,8 +7,11 @@
 # every build. Those two notes are dropped here; anything else protoc says -- an
 # error, any other warning -- still gets through, and a failed run still fails.
 
+# The arguments come joined with "|" (protobufs.cmake).
+string(REPLACE "|" ";" args "${PROTOC_ARGS}")
+
 execute_process(
-	COMMAND "${PROTOC}" ${PROTOC_ARGS}
+	COMMAND "${PROTOC}" ${args}
 	RESULT_VARIABLE rc
 	OUTPUT_VARIABLE out
 	ERROR_VARIABLE err

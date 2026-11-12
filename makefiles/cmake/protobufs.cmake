@@ -57,10 +57,11 @@ function(s2sdk_protobufs target)
 		# Through protoc_run.cmake, which drops protoc's notes about the protos
 		# themselves (no syntax line, an unused import) and keeps the rest.
 		set(protoc_args ${proto_paths} "--cpp_out=${out}" "${proto}")
-		string(REPLACE ";" "\\;" protoc_args_escaped "${protoc_args}")
+		# "|" between the arguments: a ";" list does not survive the command line.
+		string(REPLACE ";" "|" protoc_args_joined "${protoc_args}")
 		add_custom_command(
 			OUTPUT "${out}/${name}.pb.cc" "${out}/${name}.pb.h"
-			COMMAND "${CMAKE_COMMAND}" "-DPROTOC=${protoc}" "-DPROTOC_ARGS=${protoc_args_escaped}"
+			COMMAND "${CMAKE_COMMAND}" "-DPROTOC=${protoc}" "-DPROTOC_ARGS=${protoc_args_joined}"
 				-P "${S2SDK_PROTOC_RUN}"
 			DEPENDS ${protos} "${S2SDK_PROTOC_RUN}"
 			COMMENT "Generating ${name}.pb.cc"
